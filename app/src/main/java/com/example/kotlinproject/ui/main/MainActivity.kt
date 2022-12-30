@@ -3,14 +3,13 @@ package com.example.kotlinproject.ui.main
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
-import android.widget.TextView
-import android.widget.Toolbar
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 
-import com.example.kotlinproject.R
+import com.example.kotlinproject.data.model.Note
 import com.example.kotlinproject.databinding.ActivityMainBinding
+import com.example.kotlinproject.viewmodel.MainViewModel
+
 //import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -32,8 +31,13 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(ui.toolbar) //// Через View Binding
 
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-        adapter = MainAdapter()
-       ui.mainRecycler.adapter = adapter // Через View Binding
+        adapter = MainAdapter(object : MainAdapter.OnItemClickListener {
+            override fun onItemClick(note: Note) {
+                openNoteScreen(note)
+            }
+        })
+        ui.mainRecycler.adapter = adapter // Через View Binding
+        ui.floatingActionButton.setOnClickListener { openNoteScreen(null) }
 
         viewModel.viewState().observe(this, Observer<MainViewState> { it ->
             it?.let { adapter.notes = it.notes }
@@ -48,7 +52,10 @@ class MainActivity : AppCompatActivity() {
 //            (it as Button).text = "GHHHHHHHH"
 //            textView.text = "JJJJJJJJ"
 //        }
+    }
 
-
+    private fun openNoteScreen(note: Note?) {
+        val intent = NoteActivity.getStartIntent(this, note)
+        startActivity(intent)
     }
 }
