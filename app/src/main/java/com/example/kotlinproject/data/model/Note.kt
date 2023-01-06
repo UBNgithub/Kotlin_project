@@ -5,11 +5,11 @@ import kotlinx.android.parcel.Parcelize
 import java.util.*
 
 @Parcelize
-// Унаследкем от Parcelable ,чтобы ложить обьект в интент
+// Унаследуем от Parcelable ,чтобы ложить обьект в интент
 data class Note(
-    val id: String,
-    val title: String,
-    val note: String,
+    val id: String ="",
+    val title: String ="",
+    val note: String= "",
     val color: Color = Color.WHITE, //значение по умолчанию
     val lastChanged: Date = Date()
 ) : Parcelable {

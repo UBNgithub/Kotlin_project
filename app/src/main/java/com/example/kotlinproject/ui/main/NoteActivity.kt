@@ -21,6 +21,7 @@ import com.example.kotlinproject.data.model.Color
 import com.example.kotlinproject.data.model.Note
 import com.example.kotlinproject.databinding.ActivityNoteBinding
 import com.example.kotlinproject.extensions.DATE_TIME_FORMAT
+import com.example.kotlinproject.viewmodel.BaseViewModel
 import com.example.kotlinproject.viewmodel.NoteViewModel
 import com.google.android.material.textfield.TextInputEditText
 
@@ -31,21 +32,22 @@ import java.util.*
 
 private const val SAVE_DELAY = 2000L
 
-class NoteActivity : AppCompatActivity() {
+class NoteActivity :BaseActivity<Note?, NoteViewState>() {
 
     companion object {
         private val EXTRA_NOTE = NoteActivity::class.java.name + "extra.Note"
-        fun getStartIntent(context: Context, note: Note?): Intent {
+        fun getStartIntent(context: Context, noteId: String?): Intent {
             val intent = Intent(context, NoteActivity::class.java)
-            intent.putExtra(EXTRA_NOTE, note)
+            intent.putExtra(EXTRA_NOTE, noteId)
             return intent
         }
     }
 
     private var note: Note? = null
-
-    private lateinit var ui : ActivityNoteBinding
-    private lateinit var viewModel: NoteViewModel
+   // private lateinit var ui : ActivityNoteBinding
+    // private lateinit var viewModel: NoteViewModel
+    override val viewModel: NoteViewModel by lazy { ViewModelProvider(this).get(NoteViewModel::class.java) }
+    override val layoutRes: Int = R.layout.activity_note
 //
 //   private  lateinit var editText: TextInputEditText
 //   private  lateinit var textView: EditText
@@ -68,18 +70,23 @@ class NoteActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ui = ActivityNoteBinding.inflate(layoutInflater)
+       // ui = ActivityNoteBinding.inflate(layoutInflater)
         //setContentView(R.layout.activity_note)
-        setContentView(ui.root)
+       // setContentView(ui.root)
 
 
-        viewModel = ViewModelProvider(this).get(NoteViewModel::class.java)
+      //  viewModel = ViewModelProvider(this).get(NoteViewModel::class.java)
 
-        note = intent.getParcelableExtra(EXTRA_NOTE)
-        Log.d("ONCREATE ", note.toString())
-        setSupportActionBar(ui.toolbar)
+       // note = intent.getParcelableExtra(EXTRA_NOTE)
+        val noteId = intent.getStringExtra(EXTRA_NOTE)
+       // Log.d("ONCREATE ", note.toString())
+        setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = if (note != null) {
+        noteId?.let {
+            viewModel.loadNote(it)
+        }
+
+        supportActionBar?.title = if (noteId != null) {
             SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault()).format(note!!.lastChanged)
         } else {
             getString(R.string.new_note_title)
@@ -89,8 +96,8 @@ class NoteActivity : AppCompatActivity() {
 
     private fun initView() {
         if (note != null) {
-            ui.titleET.setText(note?.title ?: "")
-            ui.bodyET.setText(note?.note ?: "")
+            title_ET.setText(note?.title ?: "")
+            bodyET.setText(note?.note ?: "")
 //
             val color = when (note!!.color) {
                 Color.WHITE -> R.color.color_white
@@ -101,14 +108,14 @@ class NoteActivity : AppCompatActivity() {
                 Color.GREEN -> R.color.color_green
                 Color.BLUE -> R.color.color_blue
             }
-            ui.toolbar.setBackgroundColor(resources.getColor(color))
+            toolbar.setBackgroundColor(resources.getColor(color))
 
 //            editText.addTextChangedListener(textChangeListener)
 //     textView.addTextChangedListener(textChangeListener)
 
         }
-        ui.titleET.addTextChangedListener(textChangeListener)
-        ui.bodyET.addTextChangedListener(textChangeListener)
+      title_ET.addTextChangedListener(textChangeListener)
+       bodyET.addTextChangedListener(textChangeListener)
 
 
     }
@@ -130,8 +137,8 @@ class NoteActivity : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed(object : Runnable {
             override fun run() {
                 Log.d("triggerSaveNote", "run")
-               note = note?.copy(title = ui.titleET.text.toString(),
-               note = ui.bodyET.text.toString(),
+               note = note?.copy(title = title_ET.text.toString(),
+               note = bodyET.text.toString(),
                lastChanged = Date()) ?: createNewNote()
                 if (note != null) {
                     Log.d("triggerSaveNote", "note != null")
@@ -145,18 +152,23 @@ class NoteActivity : AppCompatActivity() {
 
         }, SAVE_DELAY)
     }
-    private  fun createNewNote() : Note = Note(UUID.randomUUID().toString(),
-    ui.titleET.text.toString(),
-    ui.bodyET.text.toString())
+//    private  fun createNewNote() : Note = Note(UUID.randomUUID().toString(),
+//        title_ET.text.toString(),
+//    bodyET.text.toString())
 
-//    private fun createNewNote(): Note {
-//        return Note(
-//            UUID.randomUUID().toString(),
-//            title_ET.text.toString(),
-//            bodyET.text.toString()
-//        )
-//        //Log.d("createNewNote", title_ET.text.toString() + " " + bodyET.text.toString())
-//        Log.d("createNewNote", "Заметка!!!")
-//    }
+    private fun createNewNote(): Note {
+        return Note(
+            UUID.randomUUID().toString(),
+            title_ET.text.toString(),
+            bodyET.text.toString()
+        )
+        Log.d("createNewNote", title_ET.text.toString() + " " + bodyET.text.toString())
+        Log.d("createNewNote", "Заметка!!!")
+    }
+
+    override fun renderData(data: Note?) {
+        this.note = data
+        initView()
+    }
 
 }
