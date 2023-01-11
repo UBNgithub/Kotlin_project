@@ -3,16 +3,23 @@ package com.example.kotlinproject.ui.main
 
 import android.os.Bundle
 import androidx.lifecycle.ViewModelProvider
+import androidx.viewbinding.ViewBinding
 import com.example.kotlinproject.R
 
 import com.example.kotlinproject.data.model.Note
+import com.example.kotlinproject.databinding.ActivityMainBinding
 import com.example.kotlinproject.viewmodel.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity: BaseActivity<List<Note>?, MainViewState>() {
-    override val viewModel: MainViewModel by lazy{
+    override val viewModel: MainViewModel
+    by lazy{
         ViewModelProvider(this).get(MainViewModel::class.java)
     }
+    override val ui: ActivityMainBinding
+    by lazy { ActivityMainBinding.inflate(layoutInflater) }
+
+
     override val layoutRes: Int = R.layout.activity_main
     private  lateinit var adapter: MainAdapter
 
@@ -24,8 +31,8 @@ class MainActivity: BaseActivity<List<Note>?, MainViewState>() {
               openNoteScreen(note)
             }
         })
-        mainRecycler.adapter =adapter
-        floatingActionButton.setOnClickListener {
+        ui.mainRecycler.adapter =adapter
+        ui.floatingActionButton.setOnClickListener {
             openNoteScreen(null)
         }
 
@@ -40,6 +47,8 @@ class MainActivity: BaseActivity<List<Note>?, MainViewState>() {
         if (data == null) return
         adapter.notes = data
     }
+
+
 
 
 }
