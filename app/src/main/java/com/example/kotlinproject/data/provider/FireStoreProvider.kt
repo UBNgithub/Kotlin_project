@@ -3,12 +3,16 @@ package com.example.kotlinproject.data.provider
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.kotlinproject.data.error.NoAuthException
 import com.example.kotlinproject.data.model.Note
 import com.example.kotlinproject.data.model.NoteResult
+import com.example.kotlinproject.data.model.User
 import com.google.android.gms.tasks.OnFailureListener
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
 
 private const val NOTES_COLLECTION = "notes"
+private const val USER_COLLECTION = "users"
 
 class FireStoreProvider : RemoteDataProvider {
     companion object {
@@ -19,7 +23,15 @@ class FireStoreProvider : RemoteDataProvider {
     private val db = FirebaseFirestore.getInstance()
 
     //ссылка на коллекцию
-    private val noteReference = db.collection(NOTES_COLLECTION)
+   // private val noteReference = db.collection(NOTES_COLLECTION)
+    // Получение ссылки на коллекцию заметок пользователя (замена NoteReference)
+    private fun getUserNoteCollection() = currentUser?.let {
+        db.collection(USER_COLLECTION).document(it.uid).collection(NOTES_COLLECTION)
+    } ?: throw NoAuthException()
+
+    //Авторизованный юзер
+    private val currentUser
+        get() = FirebaseAuth.getInstance().currentUser
 
 
     //    override fun subscribeToAllNotes(): LiveData<NoteResult> {
@@ -40,17 +52,31 @@ class FireStoreProvider : RemoteDataProvider {
 //        return  result
 //    }
     // Рефакторим метод сверху subscribeToAllNotes()
+//    override fun subscribeToAllNotes(): LiveData<NoteResult> =
+//        MutableLiveData<NoteResult>().apply {
+//            noteReference.addSnapshotListener { snapshot, error ->
+//                value = error?.let { NoteResult.Error(it) }
+//                    ?: snapshot?.let {
+//                        val notes = it.documents.map {  it.toObject(Note::class.java)}
+//                        NoteResult.Success(notes)
+//                    }
+//            }
+//        }
+    //рефакторим subscribeToAllNotes() под юзера
     override fun subscribeToAllNotes(): LiveData<NoteResult> =
         MutableLiveData<NoteResult>().apply {
-            noteReference.addSnapshotListener { snapshot, error ->
-                value = error?.let { NoteResult.Error(it) }
-                    ?: snapshot?.let {
-                        val notes = it.documents.map {  it.toObject(Note::class.java)}
-                        NoteResult.Success(notes)
-                    }
+            try {
+                getUserNoteCollection().addSnapshotListener { snapshot, error ->
+                    value = error?.let { throw it }
+                        ?: snapshot?.let {
+                            val notes = it.documents.map { it.toObject(Note::class.java) }
+                            NoteResult.Success(notes)
+                        }
+                }
+            } catch (e: Throwable){
+                value = NoteResult.Error(e)
             }
         }
-
 
 
     // получение
@@ -68,9 +94,11 @@ class FireStoreProvider : RemoteDataProvider {
 //    }
 
     //Рефакторим getNoteById
-        override fun getNoteById(id: String): LiveData<NoteResult> =
-            MutableLiveData<NoteResult>().apply {
-                noteReference.document(id)
+    override fun getNoteById(id: String): LiveData<NoteResult> =
+        MutableLiveData<NoteResult>().apply {
+
+            try {
+                getUserNoteCollection().document(id)
                     .get()
                     .addOnSuccessListener { p0 ->
                         value = NoteResult.Success(p0?.toObject(Note::class.java))
@@ -78,7 +106,10 @@ class FireStoreProvider : RemoteDataProvider {
                     .addOnFailureListener {
                         value = NoteResult.Error(it)
                     }
+            }catch (e: Throwable) {
+                value = NoteResult.Error(e)
             }
+        }
 
     // Отправляет документ на сервер, сохраняет, подписывается на изменения
 //    override fun saveNote(note: Note): LiveData<NoteResult> {
@@ -98,20 +129,30 @@ class FireStoreProvider : RemoteDataProvider {
 //        return result
 //    }
     // Рефакторим saveNote
-    override fun saveNote(note: Note): LiveData<NoteResult>
-     = MutableLiveData<NoteResult>().apply {
-        noteReference.document(note.id)
-        .set(note)
-        .addOnSuccessListener {
-            Log.d(TAG, "Note $note is saved")
-          value = NoteResult.Success(note)
-        }.addOnFailureListener {
-            OnFailureListener { p0 ->
-                Log.d(TAG, "Error saving note  $note , message: ${p0.message}")
-             value = NoteResult.Error(p0)
-            }
-        } }
+    override fun saveNote(note: Note): LiveData<NoteResult> =
+        MutableLiveData<NoteResult>().apply {
+           try {
+               getUserNoteCollection().document(note.id)
+                   .set(note)
+                   .addOnSuccessListener {
+                       Log.d(TAG, "Note $note is saved")
+                       value = NoteResult.Success(note)
+                   }.addOnFailureListener {
+                       OnFailureListener { p0 ->
+                           Log.d(TAG, "Error saving note  $note , message: ${p0.message}")
+                           //value = NoteResult.Error(p0)
+                           throw p0
+                       }
+                   }
 
+           } catch (e: Throwable) {
+               value = NoteResult.Error(e)
+           }
+    }
+    override fun getCurrentUser(): LiveData<User?> =
+        MutableLiveData<User?>().apply {
+            value =currentUser?.let { User(it.displayName ?:"", it.email ?: "") }
+        }
 
 
 }

@@ -44,12 +44,17 @@ android {
 }
 
 dependencies {
-    //Firebase Firestore
+    //Firebase
    implementation 'com.google.firebase:firebase-firestore:24.4.1'
+   
 
     // Multidex
     implementation 'androidx.multidex:multidex:2.0.1'
-    //implementation 'com.google.firebase:firebase-firestore-ktx:24.4.1'
+
+    implementation 'com.google.firebase:firebase-firestore-ktx:24.4.1'
+
+    implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
+
 
     def cardview_version = '1.0.0'
 
