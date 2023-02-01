@@ -10,7 +10,7 @@ data class Note(
     val id: String ="",
     val title: String ="",
     val note: String= "",
-    val color: Color = Color.WHITE, //значение по умолчанию
+    val color: Color = Color.RED, //значение по умолчанию
     val lastChanged: Date = Date()
 ) : Parcelable {
 

@@ -2,4 +2,9 @@
     <string name="app_name">Kotlin project</string>
     <string name="title_hint">Загловок</string>
     <string name="new_note_title">Новый заголовок</string>
+    <string name="palette">Palette</string>
+    <string name="delete_menu_item">Delete</string>
+    <string name="delete_dialog_message">Удалить диалог</string>
+    <string name="cancel_btn_title">Cancel</string>
+    <string name="ok_btn_title">Ok</string>
 </resources>

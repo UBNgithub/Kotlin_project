@@ -14,7 +14,7 @@ import com.example.kotlinproject.data.error.NoAuthException
 import com.example.kotlinproject.viewmodel.BaseViewModel
 import com.firebase.ui.auth.AuthUI
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_main.*
+//import kotlinx.android.synthetic.main.activity_main.*
 
 const val RC_SIGN_IN: Int = 458
 abstract class BaseActivity<T, S : BaseViewState<T>> : AppCompatActivity() {
@@ -75,16 +75,16 @@ abstract class BaseActivity<T, S : BaseViewState<T>> : AppCompatActivity() {
 
     }
 
-    protected fun showError(message: String) {
+protected open fun showError(message: String) {
 //        val snackbar = Snackbar.make(mainRecycler, message, Snackbar.LENGTH_INDEFINITE)
 //        snackbar.setAction("Ok", View.OnClickListener {
 //            snackbar.dismiss()
 //        })
 //        snackbar.show()
-        Snackbar.make(mainRecycler, message, Snackbar.LENGTH_INDEFINITE).apply {
-            setAction("Ok") { dismiss() }
-            show()
-        }
+//        Snackbar.make(mainRecycler, message, Snackbar.LENGTH_INDEFINITE).apply {
+//            setAction("Ok") { dismiss() }
+//            show()
+//        }
 
     }
 

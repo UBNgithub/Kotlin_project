@@ -23,7 +23,7 @@ class FireStoreProvider : RemoteDataProvider {
     private val db = FirebaseFirestore.getInstance()
 
     //ссылка на коллекцию
-   // private val noteReference = db.collection(NOTES_COLLECTION)
+    // private val noteReference = db.collection(NOTES_COLLECTION)
     // Получение ссылки на коллекцию заметок пользователя (замена NoteReference)
     private fun getUserNoteCollection() = currentUser?.let {
         db.collection(USER_COLLECTION).document(it.uid).collection(NOTES_COLLECTION)
@@ -73,7 +73,7 @@ class FireStoreProvider : RemoteDataProvider {
                             NoteResult.Success(notes)
                         }
                 }
-            } catch (e: Throwable){
+            } catch (e: Throwable) {
                 value = NoteResult.Error(e)
             }
         }
@@ -106,7 +106,7 @@ class FireStoreProvider : RemoteDataProvider {
                     .addOnFailureListener {
                         value = NoteResult.Error(it)
                     }
-            }catch (e: Throwable) {
+            } catch (e: Throwable) {
                 value = NoteResult.Error(e)
             }
         }
@@ -131,27 +131,45 @@ class FireStoreProvider : RemoteDataProvider {
     // Рефакторим saveNote
     override fun saveNote(note: Note): LiveData<NoteResult> =
         MutableLiveData<NoteResult>().apply {
-           try {
-               getUserNoteCollection().document(note.id)
-                   .set(note)
-                   .addOnSuccessListener {
-                       Log.d(TAG, "Note $note is saved")
-                       value = NoteResult.Success(note)
-                   }.addOnFailureListener {
-                       OnFailureListener { p0 ->
-                           Log.d(TAG, "Error saving note  $note , message: ${p0.message}")
-                           //value = NoteResult.Error(p0)
-                           throw p0
-                       }
-                   }
+            try {
+                getUserNoteCollection().document(note.id)
+                    .set(note)
+                    .addOnSuccessListener {
+                        Log.d(TAG, "Note $note is saved")
+                        value = NoteResult.Success(note)
+                    }.addOnFailureListener {
+                        OnFailureListener { p0 ->
+                            Log.d(TAG, "Error saving note  $note , message: ${p0.message}")
+                            //value = NoteResult.Error(p0)
+                            throw p0
+                        }
+                    }
 
-           } catch (e: Throwable) {
-               value = NoteResult.Error(e)
-           }
-    }
+            } catch (e: Throwable) {
+                value = NoteResult.Error(e)
+            }
+        }
+
     override fun getCurrentUser(): LiveData<User?> =
         MutableLiveData<User?>().apply {
-            value =currentUser?.let { User(it.displayName ?:"", it.email ?: "") }
+            value = currentUser?.let { User(it.displayName ?: "", it.email ?: "") }
+        }
+
+    override fun deleteNote(noteId: String): LiveData<NoteResult> =
+        MutableLiveData<NoteResult>().apply {
+            try {
+                getUserNoteCollection().document(noteId)
+                    .delete()
+                    .addOnSuccessListener {
+                        value = NoteResult.Success(null)
+                    }
+                    .addOnFailureListener {
+                        value = NoteResult.Error(it)
+                    }
+            } catch (e: Throwable) {
+                value= NoteResult.Error(e)
+
+            }
         }
 
 

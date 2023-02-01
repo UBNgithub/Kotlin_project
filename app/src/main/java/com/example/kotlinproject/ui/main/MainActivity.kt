@@ -17,7 +17,8 @@ import com.example.kotlinproject.databinding.ActivityMainBinding
 import com.example.kotlinproject.ui.main.splash.SplashActivity
 import com.example.kotlinproject.viewmodel.MainViewModel
 import com.firebase.ui.auth.AuthUI
-import kotlinx.android.synthetic.main.activity_main.*
+import com.google.android.material.snackbar.Snackbar
+//import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity: BaseActivity<List<Note>?, MainViewState>(), LogoutDialog.LogoutListener {
     companion object {
@@ -38,7 +39,7 @@ class MainActivity: BaseActivity<List<Note>?, MainViewState>(), LogoutDialog.Log
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setSupportActionBar(toolbar)
+        setSupportActionBar(ui.toolbar)
         adapter = MainAdapter(object : MainAdapter.OnItemClickListener{
             override fun onItemClick(note: Note) {
               openNoteScreen(note)
@@ -85,6 +86,14 @@ class MainActivity: BaseActivity<List<Note>?, MainViewState>(), LogoutDialog.Log
                 finish()
             }
     }
+
+    override fun showError(message: String) {
+        Snackbar.make(ui.mainRecycler, message, Snackbar.LENGTH_INDEFINITE).apply {
+            setAction("Ok") { dismiss() }
+            show()
+        }
+    }
+
 
 
 }
